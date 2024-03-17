@@ -12,20 +12,20 @@ class GetWorksQuerySerializer(serializers.Serializer):
     student_id = serializers.UUIDField(required=False)
 
 
-# POST /students
+# /students
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = '__all__'
 
 
-# POST /works
+# /works
 class WorkSerializer(serializers.ModelSerializer):
     class Meta:
         model = PracticalWork
         fields = '__all__'
 
 
-# PATCH /works/{work_id}
+# /works/{work_id}
 class MarkWorkQuerySerializer(serializers.Serializer):
     mark = serializers.IntegerField()

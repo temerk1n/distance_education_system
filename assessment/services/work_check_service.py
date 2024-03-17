@@ -2,31 +2,18 @@ from datetime import datetime
 from uuid import UUID
 
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from ..models import Student, PracticalWork
 
 
 class WorkCheckService:
 
-    def submit_work(self, work: PracticalWork) -> None:
-        work.save()
-
-    def add_student(self, student: Student) -> None:
-        student.save()
-
-    def get_work_by_id(self, work_id: UUID) -> PracticalWork:
-        work: PracticalWork = PracticalWork.objects.get(pk=work_id)
-        return work
-
-    def get_students(self, student_id: UUID) -> Student:
-        student: Student = Student.objects.get(pk=student_id)
-        return student
-
     def check_work(self, work_id: UUID, mark: int) -> None:
         work: PracticalWork = get_object_or_404(PracticalWork, id=work_id)
         if 0 <= mark <= 100:
             work.mark = mark
-            work.mark_date = datetime.now()
+            work.mark_date = timezone.now()
             self.send_notification(work_id)
             work.save()
         else:
