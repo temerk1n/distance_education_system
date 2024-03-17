@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Student
+from assessment.models import Student, PracticalWork
 
 
 # GET /works
@@ -13,16 +13,17 @@ class GetWorksQuerySerializer(serializers.Serializer):
 
 
 # POST /students
-class StudentSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=20)
-    last_name = serializers.CharField(max_length=20)
-    submitted_works_count = serializers.IntegerField()
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = '__all__'
 
 
 # POST /works
-class SubmitWorkBodySerializer(serializers.Serializer):
-    student_id = serializers.UUIDField()
-    file = serializers.FileField()
+class WorkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PracticalWork
+        fields = '__all__'
 
 
 # PATCH /works/{work_id}
