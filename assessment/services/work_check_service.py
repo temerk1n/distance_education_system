@@ -47,8 +47,8 @@ class WorkCheckService:
             if from_date and to_date:
                 works = (PracticalWork.objects
                          .filter(student_id=student_id)
-                         .filter(submitting_date__gt=from_date)
-                         .filter(submitting_date__lt=to_date))[offset:offset + limit]
+                         .filter(submitting_date__gte=from_date)
+                         .filter(submitting_date__lte=to_date))[offset:offset + limit]
             else:
                 works = PracticalWork.objects.filter(student_id=student_id)[offset:offset + limit]
         else:
