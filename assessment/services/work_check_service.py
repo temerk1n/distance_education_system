@@ -8,19 +8,25 @@ from ..models import Student, PracticalWork
 
 
 class WorkCheckService:
+    def add_work(self, work: PracticalWork) -> PracticalWork:
+        work.save()
+        return PracticalWork.objects.get(id=work.id)
 
-    def check_work(self, work_id: UUID, mark: int) -> None:
-        work: PracticalWork = get_object_or_404(PracticalWork, id=work_id)
+    def get_work_by_id(self, id: UUID) -> PracticalWork:
+        return get_object_or_404(PracticalWork, id=id)
+
+    def mark_work(self, id: UUID, mark: int) -> None:
+        work: PracticalWork = get_object_or_404(PracticalWork, id=id)
+
         if 0 <= mark <= 100:
             work.mark = mark
             work.mark_date = timezone.now()
-            self.send_notification(work_id)
+            self.send_notification(work)
             work.save()
         else:
             raise ValueError("Оценка должна быть от 0 до 100")
 
-    def send_notification(self, work_id: UUID) -> None:
-        work = PracticalWork.objects.get(pk=work_id)
+    def send_notification(self, work: PracticalWork) -> None:
         student = Student.objects.get(pk=work.student_id)
         print(f"\nСтуденту {student.last_name} была выставлена оценка {work.mark} в {work.mark_date}")
 
@@ -29,16 +35,13 @@ class WorkCheckService:
             from_date: datetime = None, to_date: datetime = None,
             student_id: UUID = None
     ) -> list[PracticalWork]:
-        works: list[PracticalWork] = []
         if student_id:
             if from_date and to_date:
-                works = (PracticalWork.objects
-                         .filter(student_id=student_id)
-                         .filter(submitting_date__gte=from_date)
-                         .filter(submitting_date__lte=to_date))[offset:offset + limit]
+                return (PracticalWork.objects
+                        .filter(student_id=student_id)
+                        .filter(submitting_date__gte=from_date)
+                        .filter(submitting_date__lte=to_date))[offset:offset + limit]
             else:
-                works = PracticalWork.objects.filter(student_id=student_id)[offset:offset + limit]
+                return PracticalWork.objects.filter(student_id=student_id)[offset:offset + limit]
         else:
-            works = PracticalWork.objects.all()[offset:offset + limit]
-
-        return works
+            return PracticalWork.objects.all()[offset:offset + limit]

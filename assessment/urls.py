@@ -6,13 +6,6 @@ from . import views
 
 app_name = 'assessment'
 
-router = routers.SimpleRouter(trailing_slash=False)
-router.register(r'students', views.StudentsViewSet)
-router.register(r'works', views.WorksViewSet)
-
-urlpatterns = []
-
-urlpatterns += router.urls
 urlpatterns = [
     path('students',
          views.StudentsViewSet.as_view(
@@ -22,6 +15,8 @@ urlpatterns = [
          views.StudentsViewSet.as_view(
              {'get': 'retrieve', 'delete': 'destroy'}
          ), name='student-detail'),
+    path('works', views.WorksViewSet.as_view({'post': 'create', 'get': 'list'}), name='works'),
+    path('works/<str:id>', views.WorksViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update'}), name='work-detail'),
 ]
 
 if settings.DEBUG:

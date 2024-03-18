@@ -1,31 +1,47 @@
 from uuid import UUID
 
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from assessment.models import PracticalWork, Student
-from assessment.serializers import WorkSerializer, StudentSerializer, MarkWorkQuerySerializer
+from assessment.serializers import WorkSerializer, StudentSerializer, MarkWorkQuerySerializer, WorkRequestSerializer
 from assessment.services.students_service import StudentsService
 from assessment.services.work_check_service import WorkCheckService
 
 
-class WorksViewSet(ModelViewSet):
+class WorksViewSet(ViewSet):
     work_service = WorkCheckService()
-    lookup_field = 'id'
 
-    serializer_class = WorkSerializer
-    queryset = PracticalWork.objects.all()
+    def create(self, request):
+        body = WorkRequestSerializer(data=request.data)
+        if not body.is_valid():
+            raise ValidationError(body.errors)
+
+        self.work_service.add_work(PracticalWork(**body.validated_data))
+        return Response(status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, id: UUID = None):
+        try:
+            work: PracticalWork = self.work_service.get_work_by_id(id)
+            return Response(data=WorkSerializer(work).data, status=status.HTTP_200_OK)
+        except NotFound:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     def partial_update(self, request, id: UUID = None):
         body = MarkWorkQuerySerializer(data=request.data)
         if not body.is_valid():
             raise ValidationError(body.errors)
 
-        self.work_service.check_work(id, **body.validated_data)
-        return Response(request.data)
+        try:
+            self.work_service.mark_work(id, **body.validated_data)
+            return Response(request.data)
+        except ValueError as e:
+            return Response({'message': e})
 
+    def list(self, request, *args, **kwargs):
+        return Response()
 
 
 class StudentsViewSet(ViewSet):
@@ -42,7 +58,7 @@ class StudentsViewSet(ViewSet):
         try:
             student: Student = self.students_service.get_student(id)
             return Response(data=StudentSerializer(student).data, status=status.HTTP_200_OK)
-        except Exception:
+        except NotFound:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def list(self, _):
