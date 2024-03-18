@@ -15,6 +15,11 @@ class GetWorksQuerySerializer(serializers.Serializer):
     student_id = serializers.UUIDField(required=False)
 
 
+class NewStudentSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=20)
+    last_name = serializers.CharField(max_length=20)
+
+
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student

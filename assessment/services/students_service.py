@@ -11,7 +11,7 @@ class StudentsService:
         return Student.objects.get(id=student.id)
 
     def get_student(self, id: UUID) -> Student:
-        return Student.objects.get(id=id)
+        return get_object_or_404(Student, id=id)
 
     def get_all_students(self) -> list[Student]:
         return Student.objects.all()
