@@ -1,18 +1,23 @@
 from uuid import UUID
 
+from django.utils import timezone
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from assessment.models import PracticalWork, Student
-from assessment.serializers import WorkSerializer, StudentSerializer, MarkWorkQuerySerializer, WorkRequestSerializer
+from assessment.serializers import WorkSerializer, StudentSerializer, MarkWorkQuerySerializer, WorkRequestSerializer, \
+    GetWorksQuerySerializer, OperationSerializer, GetOperationQuerySerializer
+from assessment.services.operations_service import OperationsService
 from assessment.services.students_service import StudentsService
 from assessment.services.work_check_service import WorkCheckService
 
 
 class WorksViewSet(ViewSet):
     work_service = WorkCheckService()
+    operations_service = OperationsService()
 
     def create(self, request):
         body = WorkRequestSerializer(data=request.data)
@@ -40,8 +45,26 @@ class WorksViewSet(ViewSet):
         except ValueError as e:
             return Response({'message': e})
 
-    def list(self, request, *args, **kwargs):
-        return Response()
+    @action(detail=False, methods=['GET'])
+    def request_works(self, request):
+        query = GetWorksQuerySerializer(data=request.query_params)
+        if not query.is_valid():
+            raise ValidationError(query.errors)
+        operation_id = self.operations_service.execute_operation(self.work_service.get_submitted_works, timezone.now(), query.validated_data)
+        operation = self.operations_service.get_operation(operation_id)
+
+        return Response(data=OperationSerializer(operation).data, status=status.HTTP_200_OK)
+
+    def list(self, request):
+        query = GetOperationQuerySerializer(data=request.query_params)
+        if not query.is_valid():
+            raise ValidationError(query.errors)
+
+        operation = self.operations_service.get_operation(UUID(query.data.get("id")))
+        if operation is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(data=OperationSerializer(operation).data, status=status.HTTP_200_OK)
 
 
 class StudentsViewSet(ViewSet):

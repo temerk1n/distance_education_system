@@ -3,6 +3,10 @@ from rest_framework import serializers
 from assessment.models import Student, PracticalWork
 
 
+class GetOperationQuerySerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=True)
+
+
 class GetWorksQuerySerializer(serializers.Serializer):
     offset = serializers.IntegerField(min_value=0, default=0)
     limit = serializers.IntegerField(min_value=1, default=10)
@@ -31,3 +35,9 @@ class WorkRequestSerializer(serializers.Serializer):
 
 class MarkWorkQuerySerializer(serializers.Serializer):
     mark = serializers.IntegerField()
+
+
+class OperationSerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=True)
+    done = serializers.BooleanField()
+    result = serializers.ListField(child=WorkSerializer())

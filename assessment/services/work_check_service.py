@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Set, List
 from uuid import UUID
 
 from django.shortcuts import get_object_or_404
@@ -30,18 +31,21 @@ class WorkCheckService:
         student = Student.objects.get(pk=work.student_id)
         print(f"\nСтуденту {student.last_name} была выставлена оценка {work.mark} в {work.mark_date}")
 
+    def create_get_works_operation(self):
+        pass
+
     def get_submitted_works(
             self, offset: int, limit: int,
             from_date: datetime = None, to_date: datetime = None,
             student_id: UUID = None
     ) -> list[PracticalWork]:
+        works = []
         if student_id:
             if from_date and to_date:
-                return (PracticalWork.objects
-                        .filter(student_id=student_id)
-                        .filter(submitting_date__gte=from_date)
-                        .filter(submitting_date__lte=to_date))[offset:offset + limit]
+                works = PracticalWork.objects.filter(submitting_date__range=(from_date, to_date))
             else:
-                return PracticalWork.objects.filter(student_id=student_id)[offset:offset + limit]
+                works = PracticalWork.objects.filter(student_id=student_id)
         else:
-            return PracticalWork.objects.all()[offset:offset + limit]
+            works = PracticalWork.objects.all()
+
+        return list(works)[offset:offset + limit]

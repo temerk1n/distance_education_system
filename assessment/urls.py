@@ -15,7 +15,9 @@ urlpatterns = [
          views.StudentsViewSet.as_view(
              {'get': 'retrieve', 'delete': 'destroy'}
          ), name='student-detail'),
-    path('works', views.WorksViewSet.as_view({'post': 'create', 'get': 'list'}), name='works'),
+    path('works', views.WorksViewSet.as_view({'post': 'create'}), name='works'),
+    path('works/request', views.WorksViewSet.as_view({'get': 'request_works'}), name='request-works'),
+    path('works/status', views.WorksViewSet.as_view({'get': 'list'}), name='works-status'),
     path('works/<str:id>', views.WorksViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update'}), name='work-detail'),
 ]
 
