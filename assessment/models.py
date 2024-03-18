@@ -9,6 +9,9 @@ class Student(models.Model):
     last_name = models.CharField(max_length=20)
     submitted_works_count = models.IntegerField(default=0)
 
+    def __str__(self):
+        return self.name + self.last_name
+
 
 class PracticalWork(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
