@@ -1,6 +1,8 @@
+import os
 import uuid
 
 from django.db import models
+from django.dispatch import receiver
 
 
 class Student(models.Model):
@@ -24,6 +26,17 @@ class PracticalWork(models.Model):
 
     def __str__(self):
         return self.title + ' ' + self.submitting_date.__str__()
+
+
+@receiver(models.signals.post_delete, sender=PracticalWork)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem
+    when corresponding `MediaFile` object is deleted.
+    """
+    if instance.file:
+        if os.path.isfile(instance.file.path):
+            os.remove(instance.file.path)
 
 
 class Operation:
