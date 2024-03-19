@@ -39,7 +39,7 @@ from assessment.services.work_check_service import WorkCheckService
         summary="Mark work by id",
         responses={
             status.HTTP_200_OK: None,
-            status.HTTP_400_BAD_REQUEST: None,
+            status.HTTP_400_BAD_REQUEST: ReturnDict,
             status.HTTP_422_UNPROCESSABLE_ENTITY: None,
         },
         auth=False,
@@ -48,7 +48,7 @@ from assessment.services.work_check_service import WorkCheckService
         summary="Request get works operation",
         responses={
             status.HTTP_200_OK: OperationSerializer,
-            status.HTTP_400_BAD_REQUEST: None,
+            status.HTTP_400_BAD_REQUEST: ReturnDict,
         },
         auth=False,
     ),
@@ -56,7 +56,7 @@ from assessment.services.work_check_service import WorkCheckService
         summary="Get works list",
         responses={
             status.HTTP_200_OK: WorkSerializer(many=True),
-            status.HTTP_400_BAD_REQUEST: None,
+            status.HTTP_400_BAD_REQUEST: ReturnDict,
             status.HTTP_404_NOT_FOUND: None,
         },
         auth=False,
@@ -129,7 +129,7 @@ class WorksViewSet(ViewSet):
         summary="Get student by id",
         responses={
             status.HTTP_200_OK: StudentSerializer,
-            status.HTTP_204_NO_CONTENT: None
+            status.HTTP_404_NOT_FOUND: None
         },
         auth=False,
     ),
@@ -159,11 +159,9 @@ class StudentsViewSet(ViewSet):
         return Response(data=StudentSerializer(created_student).data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, _, id: UUID = None):
-        try:
-            student: Student = self.students_service.get_student(id)
-            return Response(data=StudentSerializer(student).data, status=status.HTTP_200_OK)
-        except NotFound:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        student: Student = self.students_service.get_student(id)
+        return Response(data=StudentSerializer(student).data, status=status.HTTP_200_OK)
+
 
     def list(self, _):
         students = self.students_service.get_all_students()
