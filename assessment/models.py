@@ -10,7 +10,7 @@ class Student(models.Model):
     submitted_works_count = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.name + self.last_name
+        return self.name + ' ' + self.last_name
 
 
 class PracticalWork(models.Model):
@@ -23,7 +23,7 @@ class PracticalWork(models.Model):
     mark = models.IntegerField(blank=False, null=True)
 
     def __str__(self):
-        return self.title + self.submitting_date.__str__()
+        return self.title + ' ' + self.submitting_date.__str__()
 
 
 class Operation:
