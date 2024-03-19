@@ -10,8 +10,8 @@ class StudentsService:
         student.save()
         return Student.objects.get(id=student.id)
 
-    def get_student(self, id: UUID) -> Student:
-        return get_object_or_404(Student, id=id)
+    def get_student(self, id: UUID) -> Student | Student.DoesNotExist:
+        return Student.objects.get(id=id)
 
     def get_all_students(self) -> list[Student]:
         return Student.objects.all()
