@@ -1,24 +1,19 @@
-import json
-import os
-import time
+import uuid
 from datetime import timedelta
 from unittest import TestCase
-import uuid
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.test import APIRequestFactory, APITestCase
 
 from assessment.models import Student, PracticalWork
-from assessment.serializers import StudentSerializer, WorkSerializer, MarkWorkQuerySerializer
+from assessment.serializers import StudentSerializer, WorkSerializer
 from assessment.services.students_service import StudentsService
 from assessment.services.work_check_service import WorkCheckService
 from assessment.views import StudentsViewSet, WorksViewSet
 
 
-# Unit тесты
+# Интеграционные тесты
 class StudentServiceTests(TestCase):
     def setUp(self) -> None:
         self.service = StudentsService()

@@ -10,6 +10,10 @@ from ..models import Student, PracticalWork
 
 class WorkCheckService:
     def add_work(self, work: PracticalWork) -> PracticalWork:
+        student_id = work.student_id
+        student = Student.objects.get(id=student_id)
+        student.submitted_works_count += 1
+        student.save()
         work.save()
         return PracticalWork.objects.get(id=work.id)
 
