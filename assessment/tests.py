@@ -1,8 +1,12 @@
 import uuid
-from datetime import timedelta
+from datetime import timedelta, time
 from unittest import TestCase
+from unittest.mock import patch
 
+from django.test import skipIfDBFeature
 from django.utils import timezone
+from django_mock_queries.mocks import mocked_relations
+from django_mock_queries.query import MockModel, MockSet
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase
 
@@ -13,7 +17,29 @@ from assessment.services.work_check_service import WorkCheckService
 from assessment.views import StudentsViewSet, WorksViewSet
 
 
+# @mocked_relations(Student)
+class StudentServiceUnitTests(TestCase):
+    students = MockSet()
+    students_objects = patch('assessment.models.Student', students)
+    def setUp(self):
+        self.service = StudentsService()
+
+        self.student_id = uuid.uuid4()
+        self.student = MockModel(id=self.student_id, name='Name', last_name='LastName', submitted_works_count=0)
+        self.students.add(self.student)
+        # Student.objects.add(MockModel(id=self.student_id, name='Name', last_name='LastName', submitted_works_count=0))
+
+    @students_objects
+    def test_get_student(self):
+        print(Student.objects.all())
+        student = Student.objects.get(id=self.student_id)
+        self.assertEqual(student, self.student)
+
+
+
+
 # Интеграционные тесты
+# @skipIfDBFeature('is_mocked')
 class StudentServiceTests(TestCase):
     def setUp(self) -> None:
         self.service = StudentsService()
