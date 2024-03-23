@@ -13,7 +13,6 @@ from assessment.services.work_check_service import WorkCheckService
 from assessment.views import StudentsViewSet, WorksViewSet
 
 
-# Интеграционные тесты
 class StudentServiceTests(TestCase):
     def setUp(self) -> None:
         self.service = StudentsService()
@@ -202,11 +201,3 @@ class DistanceEducationSystemTests(APITestCase):
         response = WorksViewSet.as_view({'get': 'request_works'})(request)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # time.sleep(1)
-        # op_id = response.data.get('id')
-        # request2 = self.factory.get('/works/status', {'id': op_id})
-        # response2 = WorksViewSet.as_view({'get': 'list'})(request2)
-        #
-        # self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        # self.assertEqual(response2.data.result, self.work)
