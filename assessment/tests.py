@@ -1,21 +1,19 @@
-import time
+import uuid
 from datetime import timedelta
 from unittest import TestCase
-import uuid
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.test import APIRequestFactory, APITestCase
 
 from assessment.models import Student, PracticalWork
+from assessment.serializers import StudentSerializer, WorkSerializer
 from assessment.services.students_service import StudentsService
 from assessment.services.work_check_service import WorkCheckService
-from assessment.views import StudentsViewSet
+from assessment.views import StudentsViewSet, WorksViewSet
 
 
-# Unit тесты
+# Интеграционные тесты
 class StudentServiceTests(TestCase):
     def setUp(self) -> None:
         self.service = StudentsService()
@@ -92,7 +90,7 @@ class WorkCheckServiceTests(TestCase):
         work2.save()
 
         returned_works = self.service.get_submitted_works(offset=0, limit=3, student_id=student.id)
-        self.assertEqual(len(returned_works), 2)
+        self.assertEqual(returned_works, [work1, work2])
 
     def test_get_submitted_works_by_date(self):
         student = Student(name='TestName2', last_name="TestLastName2")
@@ -104,9 +102,9 @@ class WorkCheckServiceTests(TestCase):
         work2.save()
 
         returned_works = self.service.get_submitted_works(offset=0, limit=10, student_id=student.id,
-                                                          from_date=timezone.now()-timedelta(days=5),
+                                                          from_date=timezone.now() - timedelta(days=5),
                                                           to_date=timezone.now())
-        self.assertEqual(len(returned_works), 2)
+        self.assertEqual(returned_works, [work1, work2])
 
 
 # Компонентные тесты
@@ -115,8 +113,13 @@ class DistanceEducationSystemTests(APITestCase):
         # Every test needs access to the request factory.
         self.factory = APIRequestFactory()
 
-        self.student1 = Student.objects.create(name='John', last_name='Wick')
-        self.student2 = Student.objects.create(name='Water', last_name='Rock')
+        self.student1 = Student(name='John', last_name='Wick')
+        self.student1.save()
+        self.student2 = Student(name='Water', last_name='Rock')
+        self.student2.save()
+
+        self.work = PracticalWork(student_id=self.student1.id, title="Test title", file='Uploaded Files/test_work.txt')
+        self.work.save()
 
     def test_student_creation_success(self):
         request = self.factory.post("/students", {'name': 'TestName', 'last_name': 'TestLastName'})
@@ -128,15 +131,82 @@ class DistanceEducationSystemTests(APITestCase):
         response = StudentsViewSet.as_view({'post': 'create'})(request)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    # def test_get_student_success(self):
-    #     request = self.factory.get(f'/students/{self.student1.id}')
-    #     response = StudentsViewSet.as_view({'get': 'retrieve'})(request)
-    #     self.assertEqual(response.data, self.student1)
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_get_student_success(self):
+        request = self.factory.get(f'/students/{self.student1}')
+        response = StudentsViewSet.as_view({'get': 'retrieve'})(request, self.student1.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, StudentSerializer(self.student1).data)
+
+    def test_get_student_fail(self):
+        id = uuid.uuid4()
+        request = self.factory.get(f'students/{id}')
+        with self.assertRaises(Student.DoesNotExist):
+            response = StudentsViewSet.as_view({'get': 'retrieve'})(request, id)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_students_list(self):
+        students = [self.student1, self.student2]
+        serialized = StudentSerializer(students, many=True).data
+        request = self.factory.get(f'/students')
+        response = StudentsViewSet.as_view({'get': 'list'})(request)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(response.data, serialized)
 
     def test_student_deletion_success(self):
         request = self.factory.delete(f'/students/{self.student2.id}')
         response = StudentsViewSet.as_view({'delete': 'destroy'})(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_work_creation_success(self):
+        with open('media/Uploaded Files/test_work.txt') as file:
+            data = {'student_id': f'{self.student1.id}', 'title': "TO_DELETE", 'file': file}
+            request = self.factory.post("/works", data, format='multipart')
+            response = WorksViewSet.as_view({'post': 'create'})(request)
+            PracticalWork.objects.get(title='TO_DELETE').delete()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_work_creation_fail(self):
+        data = {'student_id': f'student_id', 'titl': "Test title", 'file': 's'}
+        request = self.factory.post("/works", data)
+        response = WorksViewSet.as_view({'post': 'create'})(request)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_work_success(self):
+        request = self.factory.get(f'/works/{self.work.id}')
+        response = WorksViewSet.as_view({'get': 'retrieve'})(request, self.work.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, WorkSerializer(self.work).data)
+
+    def test_get_work_fail(self):
+        id = uuid.uuid4()
+        request = self.factory.get(f'/works/{id}')
+        with self.assertRaises(PracticalWork.DoesNotExist):
+            response = WorksViewSet.as_view({'get': 'retrieve'})(request, id)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_mark_work_success(self):
+        data = {"mark": 50}
+        request = self.factory.patch(f'/works/{self.work.id}', data, format="json")
+        response = WorksViewSet.as_view({'patch': 'partial_update'})(request, self.work.id)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_mark_work_fail(self):
+        request = self.factory.patch(f'/works/{self.work.id}', {"mark": 1243412})
+        response = WorksViewSet.as_view({'patch': 'partial_update'})(request, self.work.id)
+
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    def test_request_works(self):
+        request = self.factory.get('/works/request', {'offset': 0, 'limit': 10})
+        response = WorksViewSet.as_view({'get': 'request_works'})(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # time.sleep(1)
+        # op_id = response.data.get('id')
+        # request2 = self.factory.get('/works/status', {'id': op_id})
+        # response2 = WorksViewSet.as_view({'get': 'list'})(request2)
+        #
+        # self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        # self.assertEqual(response2.data.result, self.work)
