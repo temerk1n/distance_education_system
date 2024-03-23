@@ -17,7 +17,7 @@ class Student(models.Model):
 
 class PracticalWork(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, null=False)
     submitting_date = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=200)
     file = models.FileField(null=True, upload_to="Uploaded Files/")
