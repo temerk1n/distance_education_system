@@ -9,7 +9,7 @@ app_name = 'assessment'
 
 urlpatterns = [
     path('api/schema', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs', SpectacularSwaggerView.as_view(url_name='assessment:schema'), name='docs'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='assessment:schema'), name='docs'),
     path('students',
          views.StudentsViewSet.as_view(
              {'post': 'create', 'get': 'list'}
