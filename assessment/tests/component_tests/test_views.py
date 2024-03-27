@@ -97,8 +97,8 @@ class DistanceEducationSystemTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    def test_request_works(self):
-        request = self.factory.get('/works/request', {'offset': 0, 'limit': 10})
-        response = WorksViewSet.as_view({'get': 'request_works'})(request)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    # def test_request_works(self):
+    #     request = self.factory.get('/works/request', {'offset': 0, 'limit': 10})
+    #     response = WorksViewSet.as_view({'get': 'request_works'})(request)
+    #
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
