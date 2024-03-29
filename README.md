@@ -24,6 +24,12 @@ poetry run py ./manage.py runserver
 
 ## Запуск тестов
 
+Для запуска всех тестов:
+
+```bash
+poetry run py ./manage.py test
+```
+
 Для запуска Unit-тестов используйте следующую команду:
 
 ```bash
