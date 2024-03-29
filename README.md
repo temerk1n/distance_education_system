@@ -39,3 +39,11 @@ poetry run py ./manage.py test assessment/tests/component_tests
 ## Swagger
 
 Документация API запускается на http://127.0.0.1:8000/api/docs
+
+## Docker
+
+Для запуска приложения в докере:
+
+```bash
+docker-compose up
+```
